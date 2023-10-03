@@ -23,9 +23,9 @@ begin
         begin
             if clk'event and clk='1' then
                 A_out <= A_in;
-                A_out <= B_in;
-                A_out <= C_in;
-                A_out <= OP_in;
+                B_out <= B_in;
+                C_out <= C_in;
+                OP_out <= OP_in;
             end if;
     end process;
 end behavior_pipeline_step;
