@@ -1,0 +1,68 @@
+# Vivado project files
+*.cache/
+*.data/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.srcs/
+*.sdk/
+
+# Vivado settings and logs
+*.jou
+*.log
+*.str
+*.bak
+
+# Generated files
+project_*.xpr
+*.bit
+*.bin
+*.bmm
+*.dcp
+*.html
+*.xdc
+*.ltx
+*.ngc
+*.tcl
+*.xgui
+*.xise
+*.xml
+*_bd.tcl
+*_top.xdc
+*_wrapper.bmm
+*_xmd.xdc
+*_xmd.ini
+
+# Compiled files
+webtalk.log
+xgui/
+hdl/
+isim/
+project_*.cache/
+project_*.runs/
+project_*.srcs/
+project_*.xpr.user
+*_vivado_*
+
+# IDE specific files
+.DS_Store
+*.suo
+*.user
+*.sln
+*.ncb
+*.aps
+*.vsp
+*.pidb
+*.opensdf
+*.VC.db
+
+# Ignore user-specific settings and configurations
+*.xilinx
+*.sws
+*.cache
+*.str
+*.history
+
+# Ignore backup files created by text editors
+*~
