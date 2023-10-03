@@ -3,10 +3,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity DataMemory_TB is
-end DataMemory_TB;
+entity data_memory_TB is
+end data_memory_TB;
 
-architecture Behavioral of DataMemory_TB is
+architecture Behavioral of data_memory_TB is
     signal CLK : STD_LOGIC := '0';
     signal RST : STD_LOGIC := '0';
     signal RW_ENABLE : STD_LOGIC := '0';
@@ -16,8 +16,8 @@ architecture Behavioral of DataMemory_TB is
 
     constant CLOCK_PERIOD : time := 10 ns;  -- Define your clock period here
 begin
-    -- Instantiate the DataMemory component
-    UUT: entity work.DataMemory
+    -- Instantiate the data_memory component
+    UUT: entity work.data_memory
         port map (
             CLK => CLK,
             RST => RST,

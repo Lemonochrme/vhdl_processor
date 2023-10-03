@@ -3,16 +3,16 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity DataMemory is
+entity data_memory is
     Port ( CLK : in STD_LOGIC;
            RST : in STD_LOGIC;
            RW_ENABLE : in STD_LOGIC;
            ADDR : in STD_LOGIC_VECTOR(7 downto 0);
            DATA_IN : in STD_LOGIC_VECTOR(7 downto 0);
            DATA_OUT : out STD_LOGIC_VECTOR(7 downto 0));
-end DataMemory;
+end data_memory;
 
-architecture Behavioral of DataMemory is
+architecture Behavioral of data_memory is
     type MemoryArray is array (0 to 255) of STD_LOGIC_VECTOR(7 downto 0);
     signal Memory : MemoryArray := (others => X"00");
 begin
