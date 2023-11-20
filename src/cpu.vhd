@@ -110,10 +110,13 @@ begin
                 li_A <= inst(23 downto 16);
                 li_B <= inst(15 downto 8);
                 li_C <= inst(7 downto 0);
+                -- In this case, copy the content of li_A directly to di_A (just the idea)
                 --case li_OP is
                     -- AFC
                     --when => X"06" =>
 
+                -- In this case, put the content in memory_register_inst and get QA in di_A (just the idea)
+                    --when => X"05" =>
                 --end case
                 PC <= PC+'1';
             end if;
