@@ -8,12 +8,7 @@ end test_cpu;
 architecture bench of test_cpu is
     component cpu
         Port (
-            clk : in STD_LOGIC;
-            pc_out : out STD_LOGIC_VECTOR(7 downto 0);
-            op_out : out STD_LOGIC_VECTOR(3 DOWNTO 0);
-            a_out : out STD_LOGIC_VECTOR(7 DOWNTO 0);
-            b_out : out STD_LOGIC_VECTOR(7 DOWNTO 0);
-            c_out : out STD_LOGIC_VECTOR(7 DOWNTO 0)
+            clk : in STD_LOGIC
         );
     end component;
 
@@ -25,15 +20,12 @@ architecture bench of test_cpu is
     
 begin
     uut: cpu PORT MAP( 
-        inClock,
-        int_PC,
-        int_re_OP,
-        int_re_A,
-        int_re_B,
-        int_re_C
+        inClock
     );
 
     -- Clock generation
     inClock <= not inClock after 10 ns; -- Adjust clock period as necessary
 
 end bench;
+
+

@@ -5,13 +5,8 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity cpu is
     Port (
-        clk : in STD_LOGIC;
-        pc_out : out STD_LOGIC_VECTOR(7 downto 0);
-        op_out: out STD_LOGIC_VECTOR(3 DOWNTO 0);
-        a_out: out STD_LOGIC_VECTOR(7 DOWNTO 0);
-        b_out: out STD_LOGIC_VECTOR(7 DOWNTO 0);
-        c_out: out STD_LOGIC_VECTOR(7 DOWNTO 0)
-    );
+        clk : in STD_LOGIC
+  );
 end cpu;
 
 ARCHITECTURE cpu_arch OF cpu IS
@@ -91,17 +86,10 @@ begin
     step4_memre : pipeline_step PORT MAP(mem_A, mem_B, mem_C, mem_OP, clk, re_A, re_B, re_C, re_OP);
     
     instruction_memory_inst : instruction PORT MAP(PC, inst , clk);
-    memory_register_inst    : reg PORT MAP(empty_4, empty_4, re_A(3 downto 0), re_OP(0), re_B, '0', clk, empty_8, empty_8);
+    memory_register_inst    : reg PORT MAP(empty_4, empty_4, re_A(3 downto 0), '1', re_B, '1', clk, empty_8, empty_8);
     
     -- alu_inst                : alu PORT MAP();
     -- data_memory_inst        : data_memory PORT MAP();
-
-    a_out <= re_A;
-    b_out <= re_B;
-    c_out <= re_C;
-    OP_out <= re_OP;
-    pc_out <= PC;
-    
 
     process(clk)
         begin
