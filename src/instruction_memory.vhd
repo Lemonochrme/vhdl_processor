@@ -23,8 +23,12 @@ entity instruction is
         for i in code_array'range loop
             init_result(i) := std_logic_vector(conv_unsigned(0, 32));
         end loop;
-        init_result(0) := X"06010C00"; -- AFC 0x0c to R01
-        init_result(1) := X"05000100"; -- COPY R01 to R00
+        init_result(0) := X"06010A00"; -- AFC 0x0a to R01
+        init_result(1) := X"06020B00"; -- AFC 0x0b to R02
+        init_result(2) := X"06030C00"; -- AFC 0x0c to R03
+        init_result(3) := X"06040D00"; -- AFC 0x0d to R04
+        init_result(4) := X"06050E00"; -- AFC 0x0e to R05
+        init_result(5) := X"05000100"; -- COPY R01 to R00
         return init_result;
     end function init;
 end instruction;

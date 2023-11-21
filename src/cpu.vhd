@@ -68,11 +68,16 @@ ARCHITECTURE cpu_arch OF cpu IS
     END COMPONENT;
 
     signal li_A, di_A, ex_A, mem_A, re_A  : STD_LOGIC_VECTOR(7 downto 0);
-    signal li_B, di_B, ex_B, mem_B, re_B : STD_LOGIC_VECTOR(7 downto 0);
+    signal li_B, ex_B, mem_B, re_B : STD_LOGIC_VECTOR(7 downto 0);
     signal li_C, di_C, ex_C, mem_C, re_C : STD_LOGIC_VECTOR(7 downto 0);
     signal li_OP, di_OP, ex_OP, mem_OP, re_OP : STD_LOGIC_VECTOR(3 downto 0);
-    signal inst : STD_LOGIC_VECTOR(31 downto 0);
+    -- Banc de registres
+    signal di_B_in, di_B_out, qA : STD_LOGIC_VECTOR(7 downto 0);
+    signal di_OP_in, di_OP_out : STD_LOGIC_VECTOR(3 downto 0);
+    signal write_enable : STD_LOGIC;
+
     --- internal component of cpu
+    signal inst : STD_LOGIC_VECTOR(31 downto 0);
     signal PC : STD_LOGIC_VECTOR(7 downto 0) := X"00";
     ---signal main_clk : STD_LOGIC;
     
@@ -80,13 +85,13 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal empty_4 : STD_LOGIC_VECTOR(3 downto 0);
     
 begin
-    step1_lidi  : pipeline_step PORT MAP(li_A, li_B, li_C, inst(7 downto 4), clk, di_A, di_B, di_C, di_OP);
-    step2_diex  : pipeline_step PORT MAP(di_A, di_B, di_C, di_OP, clk, ex_A, ex_B, ex_C, ex_OP);
+    step1_lidi  : pipeline_step PORT MAP(li_A, li_B, li_C, inst(7 downto 4), clk, di_A, di_B_out, di_C, di_OP_out);
+    step2_diex  : pipeline_step PORT MAP(di_A, di_B_in, di_C, di_OP_in, clk, ex_A, ex_B, ex_C, ex_OP);
     step3_exmem : pipeline_step PORT MAP(ex_A, ex_B, ex_C, ex_OP, clk, mem_A, mem_B, mem_C, mem_OP);
     step4_memre : pipeline_step PORT MAP(mem_A, mem_B, mem_C, mem_OP, clk, re_A, re_B, re_C, re_OP);
     
     instruction_memory_inst : instruction PORT MAP(PC, inst , clk);
-    memory_register_inst    : reg PORT MAP(empty_4, empty_4, re_A(3 downto 0), '1', re_B, '1', clk, empty_8, empty_8);
+    memory_register_inst    : reg PORT MAP(li_B(3 downto 0), empty_4, re_A(3 downto 0), re_OP(0), re_B, '1', clk, qA, empty_8);
     
     -- alu_inst                : alu PORT MAP();
     -- data_memory_inst        : data_memory PORT MAP();
@@ -99,13 +104,19 @@ begin
                 li_B <= inst(15 downto 8);
                 li_C <= inst(7 downto 0);
                 -- In this case, copy the content of li_A directly to di_A (just the idea)
-                --case li_OP is
+                case li_OP is
                     -- AFC
-                    --when => X"06" =>
-
+                    when X"6" =>
+                        di_B_in <= li_B;
+                        di_OP_in <= "0001";
                 -- In this case, put the content in memory_register_inst and get QA in di_A (just the idea)
-                    --when => X"05" =>
-                --end case
+                    when X"5" =>
+                        di_B_in <= qA;
+                        di_OP_in <= "0001";
+                   when others =>
+                        di_B_in <= di_B_out;
+                        di_OP_in <= di_OP_out;
+                end case;
                 PC <= PC+'1';
             end if;
     end process;
