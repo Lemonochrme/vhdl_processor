@@ -9,7 +9,17 @@ entity cpu is
   );
 end cpu;
 
+-- Multiplexers
 ARCHITECTURE cpu_arch OF cpu IS
+    COMPONENT mux_bdr IS
+        PORT (
+            mux_op: IN STD_LOGIC_VECTOR(3 downto 0);
+            mux_b_in: IN STD_LOGIC_VECTOR(7 downto 0);
+            mux_qa_in: IN STD_LOGIC_VECTOR(7 downto 0);
+            mux_sortie: OUT STD_LOGIC_VECTOR(7 downto 0)
+        );
+    END COMPONENT;
+    -- Logical components and memory
     COMPONENT instruction IS
 		PORT (
 			instruction : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -69,12 +79,18 @@ ARCHITECTURE cpu_arch OF cpu IS
 
     signal ex_A, mem_A, re_A  : STD_LOGIC_VECTOR(7 downto 0);
     signal ex_B, mem_B, re_B : STD_LOGIC_VECTOR(7 downto 0);
-    signal di_C, ex_C, mem_C, re_C : STD_LOGIC_VECTOR(7 downto 0);
+    signal ex_C, mem_C, re_C : STD_LOGIC_VECTOR(7 downto 0);
     signal ex_OP, mem_OP, re_OP : STD_LOGIC_VECTOR(3 downto 0);
     -- Banc de registres
-    signal di_A_in, di_A_out, di_B_in, di_B_out, qA : STD_LOGIC_VECTOR(7 downto 0);
-    signal di_OP_in, di_OP_out : STD_LOGIC_VECTOR(3 downto 0);
+    signal di_A, di_B_in, di_B_out, di_C_in, di_C_out, qA : STD_LOGIC_VECTOR(7 downto 0);
+    signal di_OP : STD_LOGIC_VECTOR(3 downto 0);
     signal write_enable : STD_LOGIC;
+    -- UAL
+    signal ex_A_out, ex_A_in, ex_B_out, ex_B_in, ex_C_out, ex_C_in, S_ALU : STD_LOGIC_VECTOR(7 downto 0);
+    signal ex_OP_out, ex_OP_in : STD_LOGIC_VECTOR(3 downto 0);
+    signal OP_ALU : STD_LOGIC_VECTOR(2 downto 0);
+    -- Step 4
+    signal W_enable: STD_LOGIC;
 
     --- internal component of cpu
     signal inst : STD_LOGIC_VECTOR(31 downto 0);
@@ -85,37 +101,33 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal empty_4 : STD_LOGIC_VECTOR(3 downto 0);
     
 begin
-    step1_lidi  : pipeline_step PORT MAP(inst(23 downto 16), inst(15 downto 8), inst(7 downto 0), inst(27 downto 24), clk, di_A_out, di_B_out, di_C, di_OP_out);
-    step2_diex  : pipeline_step PORT MAP(di_A_in, di_B_in, di_C, di_OP_in, clk, ex_A, ex_B, ex_C, ex_OP);
-    step3_exmem : pipeline_step PORT MAP(ex_A, ex_B, ex_C, ex_OP, clk, mem_A, mem_B, mem_C, mem_OP);
-    step4_memre : pipeline_step PORT MAP(mem_A, mem_B, mem_C, mem_OP, clk, re_A, re_B, re_C, re_OP);
-    
     instruction_memory_inst : instruction PORT MAP(PC, inst , clk);
-    memory_register_inst    : reg PORT MAP(di_B_out(3 downto 0), empty_4, re_A(3 downto 0), re_OP(0), re_B, '1', clk, qA, empty_8);
     
-    -- alu_inst                : alu PORT MAP();
+    -- step1 pipeline
+    step1_lidi  :           pipeline_step PORT MAP(inst(23 downto 16), inst(15 downto 8), inst(7 downto 0), inst(27 downto 24), clk, di_A, di_B_out, di_C_out, di_OP);
+    memory_register_inst :  reg PORT MAP(di_B_out(3 downto 0), di_C_out(3 downto 0), re_A(3 downto 0), W_enable, re_B, '1', clk, qA, di_C_in);
+    mux_bdr_inst :          mux_bdr PORT MAP(di_OP,di_B_out,qA,di_B_in);
+
+    -- step2 pipeline
+    step2_diex  : pipeline_step PORT MAP(di_A, di_B_in, di_C_in, di_OP, clk, ex_A_in, ex_B_in, ex_C_in, ex_OP_in);
+    -- alu_inst                : alu PORT MAP(ex_B_out, ex_C_out, OP_ALU, S_ALU);
+    
+    -- rest for now
+    step3_exmem : pipeline_step PORT MAP(ex_A_in, ex_B_in, ex_C_in, ex_OP_in, clk, mem_A, mem_B, mem_C, mem_OP);
+    step4_memre : pipeline_step PORT MAP(mem_A, mem_B, mem_C, mem_OP, clk, re_A, re_B, re_C, re_OP);
     -- data_memory_inst        : data_memory PORT MAP();
+
+    -- step4 pipeline
+    -- LC step 4
+    with re_OP select
+        W_enable <= '1' when X"6",
+                    '1' when X"5",
+                    '1' when X"1",
+                    '0' when others;
 
     process(clk)
         begin
             if clk'event and clk='1' then
-                -- In this case, copy the content of li_A directly to di_A (just the idea)
-                case di_OP_out is
-                    -- AFC
-                    when X"6" =>
-                        di_B_in <= di_B_out;
-                        di_A_in <= di_A_out;
-                        di_OP_in <= "0001";
-                -- In this case, put the content in memory_register_inst and get QA in di_A (just the idea)
-                    when X"5" =>
-                        di_B_in <= qA;
-                        di_A_in <= di_A_out;
-                        di_OP_in <= "0001";
-                   when others =>
-                        di_B_in <= di_B_out;
-                        di_A_in <= di_A_out;
-                        di_OP_in <= di_OP_out;
-                end case;
                 PC <= PC+'1';
             end if;
     end process;
