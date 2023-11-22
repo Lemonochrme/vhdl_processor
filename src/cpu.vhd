@@ -27,6 +27,22 @@ ARCHITECTURE cpu_arch OF cpu IS
             mux_sortie: OUT STD_LOGIC_VECTOR(7 downto 0)
         );
     END COMPONENT;
+    COMPONENT mux_mem_str IS
+        PORT (
+            mux_op: IN STD_LOGIC_VECTOR(3 downto 0);
+            mux_b_in: IN STD_LOGIC_VECTOR(7 downto 0);
+            mux_mem_out_in: IN STD_LOGIC_VECTOR(7 downto 0);
+            mux_sortie: OUT STD_LOGIC_VECTOR(7 downto 0)
+        );
+    END COMPONENT;
+    COMPONENT mux_mem_ldr IS
+        PORT (
+            mux_op: IN STD_LOGIC_VECTOR(3 downto 0);
+            mux_a_in: IN STD_LOGIC_VECTOR(7 downto 0);
+            mux_b_in: IN STD_LOGIC_VECTOR(7 downto 0);
+            mux_sortie: OUT STD_LOGIC_VECTOR(7 downto 0)
+        );
+    END COMPONENT;
 
     -- Logical components and memory
     COMPONENT instruction IS
@@ -85,11 +101,6 @@ ARCHITECTURE cpu_arch OF cpu IS
       OP_out:   out  STD_LOGIC_VECTOR(3 downto 0)
     );
     END COMPONENT;
-
-    signal mem_A, re_A  : STD_LOGIC_VECTOR(7 downto 0);
-    signal mem_B, re_B : STD_LOGIC_VECTOR(7 downto 0);
-    signal mem_C, re_C : STD_LOGIC_VECTOR(7 downto 0);
-    signal mem_OP, re_OP : STD_LOGIC_VECTOR(3 downto 0);
     
     -- Banc de registres
     signal di_A, di_B_in, di_B_out, di_C_in, di_C_out, qA : STD_LOGIC_VECTOR(7 downto 0);
@@ -99,14 +110,18 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal ex_A, ex_B_out, ex_B_in, ex_C, S_ALU : STD_LOGIC_VECTOR(7 downto 0);
     signal ex_OP : STD_LOGIC_VECTOR(3 downto 0);
     signal OP_ALU : STD_LOGIC_VECTOR(2 downto 0);
+    -- Memoire des donnees
+    signal mem_A, mem_B_in, mem_B_out, mem_C, mem_address, mem_data : STD_LOGIC_VECTOR(7 downto 0);
+    signal mem_OP: STD_LOGIC_VECTOR(3 downto 0);
+    signal RW_MEM: STD_LOGIC;
     -- Step 4
+    signal re_A, re_B, re_C : STD_LOGIC_VECTOR(7 downto 0);
+    signal re_OP : STD_LOGIC_VECTOR(3 downto 0);
     signal W_enable: STD_LOGIC;
 
     --- internal component of cpu
     signal inst : STD_LOGIC_VECTOR(31 downto 0);
     signal PC : STD_LOGIC_VECTOR(7 downto 0) := X"00";
-    ---signal main_clk : STD_LOGIC;
-    
     signal empty_8 : STD_LOGIC_VECTOR(7 downto 0);
     signal empty_4 : STD_LOGIC_VECTOR(3 downto 0);
     
@@ -130,11 +145,17 @@ begin
     mux_ual_inst :  mux_ual PORT MAP(ex_OP,ex_B_out,S_ALU,ex_B_in);
     
     -- rest for now
-    step3_exmem : pipeline_step PORT MAP(ex_A, ex_B_in, ex_C, ex_OP, clk, mem_A, mem_B, mem_C, mem_OP);
-    step4_memre : pipeline_step PORT MAP(mem_A, mem_B, mem_C, mem_OP, clk, re_A, re_B, re_C, re_OP);
-    -- data_memory_inst        : data_memory PORT MAP();
+    step3_exmem :       pipeline_step PORT MAP(ex_A, ex_B_in, ex_C, ex_OP, clk, mem_A, mem_B_in, mem_C, mem_OP);
+    mux_mem_ldr_inst :  mux_mem_ldr PORT MAP(mem_OP, mem_A, mem_B_in, mem_address);
+    with mem_OP select
+    RW_MEM <=   '0' when X"8",
+                '1' when others;
+    data_memory_inst :  data_memory PORT MAP(clk, '0', RW_MEM, mem_address, mem_B_in, mem_data);
+    mux_mem_str_inst :  mux_mem_str PORT MAP(mem_OP, mem_B_in, mem_data, mem_B_out);
 
+    -- Penser à changer comment le write fonctionne pour permettre le LOAD
     -- step4 pipeline
+    step4_memre : pipeline_step PORT MAP(mem_A, mem_B_out, mem_C, mem_OP, clk, re_A, re_B, re_C, re_OP);
     -- LC step 4
     with re_OP select
         W_enable <= '1' when X"6",
