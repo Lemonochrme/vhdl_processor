@@ -9,8 +9,16 @@ entity cpu is
   );
 end cpu;
 
--- Multiplexers
 ARCHITECTURE cpu_arch OF cpu IS
+    -- Multiplexers
+    COMPONENT mux_ual IS
+        PORT (
+            mux_op: IN STD_LOGIC_VECTOR(3 downto 0);
+            mux_b_in: IN STD_LOGIC_VECTOR(7 downto 0);
+            mux_alu_s_in: IN STD_LOGIC_VECTOR(7 downto 0);
+            mux_sortie: OUT STD_LOGIC_VECTOR(7 downto 0)
+        );
+    END COMPONENT;
     COMPONENT mux_bdr IS
         PORT (
             mux_op: IN STD_LOGIC_VECTOR(3 downto 0);
@@ -19,6 +27,7 @@ ARCHITECTURE cpu_arch OF cpu IS
             mux_sortie: OUT STD_LOGIC_VECTOR(7 downto 0)
         );
     END COMPONENT;
+
     -- Logical components and memory
     COMPONENT instruction IS
 		PORT (
@@ -77,17 +86,18 @@ ARCHITECTURE cpu_arch OF cpu IS
     );
     END COMPONENT;
 
-    signal ex_A, mem_A, re_A  : STD_LOGIC_VECTOR(7 downto 0);
-    signal ex_B, mem_B, re_B : STD_LOGIC_VECTOR(7 downto 0);
-    signal ex_C, mem_C, re_C : STD_LOGIC_VECTOR(7 downto 0);
-    signal ex_OP, mem_OP, re_OP : STD_LOGIC_VECTOR(3 downto 0);
+    signal mem_A, re_A  : STD_LOGIC_VECTOR(7 downto 0);
+    signal mem_B, re_B : STD_LOGIC_VECTOR(7 downto 0);
+    signal mem_C, re_C : STD_LOGIC_VECTOR(7 downto 0);
+    signal mem_OP, re_OP : STD_LOGIC_VECTOR(3 downto 0);
+    
     -- Banc de registres
     signal di_A, di_B_in, di_B_out, di_C_in, di_C_out, qA : STD_LOGIC_VECTOR(7 downto 0);
     signal di_OP : STD_LOGIC_VECTOR(3 downto 0);
     signal write_enable : STD_LOGIC;
     -- UAL
-    signal ex_A_out, ex_A_in, ex_B_out, ex_B_in, ex_C_out, ex_C_in, S_ALU : STD_LOGIC_VECTOR(7 downto 0);
-    signal ex_OP_out, ex_OP_in : STD_LOGIC_VECTOR(3 downto 0);
+    signal ex_A, ex_B_out, ex_B_in, ex_C, S_ALU : STD_LOGIC_VECTOR(7 downto 0);
+    signal ex_OP : STD_LOGIC_VECTOR(3 downto 0);
     signal OP_ALU : STD_LOGIC_VECTOR(2 downto 0);
     -- Step 4
     signal W_enable: STD_LOGIC;
@@ -109,11 +119,18 @@ begin
     mux_bdr_inst :          mux_bdr PORT MAP(di_OP,di_B_out,qA,di_B_in);
 
     -- step2 pipeline
-    step2_diex  : pipeline_step PORT MAP(di_A, di_B_in, di_C_in, di_OP, clk, ex_A_in, ex_B_in, ex_C_in, ex_OP_in);
-    -- alu_inst                : alu PORT MAP(ex_B_out, ex_C_out, OP_ALU, S_ALU);
+    step2_diex :    pipeline_step PORT MAP(di_A, di_B_in, di_C_in, di_OP, clk, ex_A, ex_B_out, ex_C, ex_OP);
+    -- LC step 2
+    with ex_OP select
+        OP_ALU <=   "000" when X"1",
+                    "110" when X"2",
+                    "001" when X"3",
+                    "111" when others;
+    alu_inst :      alu PORT MAP(ex_B_out, ex_C, OP_ALU, S_ALU);
+    mux_ual_inst :  mux_ual PORT MAP(ex_OP,ex_B_out,S_ALU,ex_B_in);
     
     -- rest for now
-    step3_exmem : pipeline_step PORT MAP(ex_A_in, ex_B_in, ex_C_in, ex_OP_in, clk, mem_A, mem_B, mem_C, mem_OP);
+    step3_exmem : pipeline_step PORT MAP(ex_A, ex_B_in, ex_C, ex_OP, clk, mem_A, mem_B, mem_C, mem_OP);
     step4_memre : pipeline_step PORT MAP(mem_A, mem_B, mem_C, mem_OP, clk, re_A, re_B, re_C, re_OP);
     -- data_memory_inst        : data_memory PORT MAP();
 
@@ -123,6 +140,8 @@ begin
         W_enable <= '1' when X"6",
                     '1' when X"5",
                     '1' when X"1",
+                    '1' when X"2",
+                    '1' when X"3",
                     '0' when others;
 
     process(clk)
