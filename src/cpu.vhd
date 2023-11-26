@@ -85,16 +85,19 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal B_RE  : STD_LOGIC_VECTOR (7 downto 0);
     signal C_RE  : STD_LOGIC_VECTOR (7 downto 0);
 
-    
+    signal W_ADDRESS_HANDLE : STD_LOGIC_VECTOR(3 DOWNTO 0);
+    signal W_DATA_HANDLE    : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    signal W_ENABLE_HANDLE  : STD_LOGIC;
+
 BEGIN
    -- Instantiation des composants
    RegisterFile_Instance: reg PORT MAP (
     address_A => "0000",
     address_B => "0000",
-    address_W => "0000",
-    W_Enable  => '0',
-    W_Data    => "00000000",
-    reset     => '0',
+    address_W => W_ADDRESS_HANDLE,
+    W_Enable  => W_ENABLE_HANDLE,
+    W_Data    => W_DATA_HANDLE,
+    reset     => '1',
     clk       => clk,
     A_Data    => open,
     B_Data    => open
@@ -180,6 +183,10 @@ BEGIN
                     A_RE <= A_MEM;
                     B_RE <= B_MEM;
                     C_RE <= C_MEM;
+
+                    W_ENABLE_HANDLE  <= '1';
+                    W_ADDRESS_HANDLE <= A_RE(3 downto 0);
+                    W_DATA_HANDLE    <= B_RE;
                 when others =>
                     null;
             end case;
