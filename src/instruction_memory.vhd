@@ -25,15 +25,6 @@ entity instruction is
         end loop;
         init_result(0) := X"06010A00"; -- AFC 0x0a to R01
         init_result(1) := X"06020B00"; -- AFC 0x0b to R02
-        init_result(2) := X"06030200"; -- AFC 0x0c to R03
-        init_result(3) := X"06040D00"; -- AFC 0x0d to R04
-        init_result(4) := X"06050E00"; -- AFC 0x0e to R05
-        init_result(5) := X"05000100"; -- COPY R01 to R00
-        init_result(6) := X"01060102"; -- ADD R06=R01+R02
-        init_result(7) := X"02070103"; -- MUL R07=R01*R03
-        init_result(8) := X"03080201"; -- SOUS R08=R01-R02
-        init_result(9) := X"08000100"; -- STORE [@00] <- R01
-        init_result(20) := X"07090000"; -- LOAD R09 -< [@00]
         return init_result;
     end function init;
 end instruction;
