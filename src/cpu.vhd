@@ -56,9 +56,74 @@ ARCHITECTURE cpu_arch OF cpu IS
 		flags : OUT STD_LOGIC_VECTOR(3 DOWNTO 0) -- Flags de l'ALU (C, N, Z, O)
 	);
     END COMPONENT;
-    
-    
-begin
 
+    -- Signaux internes
+    signal PC : STD_LOGIC_VECTOR (7 downto 0) := "00000000"; -- Program Counter
+    signal IR : STD_LOGIC_VECTOR (31 downto 0); -- Instruction Register
+    signal A : STD_LOGIC_VECTOR (7 downto 0);
+    signal B : STD_LOGIC_VECTOR (7 downto 0);
+    signal C : STD_LOGIC_VECTOR (7 downto 0);
+
+    
+BEGIN
+   -- Instantiation des composants
+   RegisterFile_Instance: reg PORT MAP (
+    address_A => "0000",
+    address_B => "0000",
+    address_W => "0000",
+    W_Enable  => '0',
+    W_Data    => "00000000",
+    reset     => '0',
+    clk       => clk,
+    A_Data    => open,
+    B_Data    => open
+    );
+
+
+
+    -- Pipeline
+
+    -- Lecture Instruction (LI)
+    LI: process(clk)
+    begin
+        if rising_edge(clk) then
+            -- Charger les instruction
+        end if;
+    end process;
+
+    DI: process(clk)
+    begin
+        if rising_edge(clk) then
+            -- Decoder IR et init A B C
+        end if;
+    end process;
+
+    EX: process(clk)
+    begin
+        if rising_edge(clk) then
+            -- Executer instruction si nécéssaire
+        end if;
+    end process;
+
+    MEM: process(clk)
+    begin
+        if rising_edge(clk) then
+            -- Ecrire ou lire memoire des données
+        end if;
+    end process;
+
+    RE: process(clk)
+    begin
+        if rising_edge(clk) then
+            -- Ecrire dans les registres
+        end if;
+    end process;
+
+    PC_UPDATE: process(clk)
+    begin
+        if rising_edge(clk) then
+            PC <= PC + 1;
+        end if;
+    end process;
 
 END cpu_arch;
