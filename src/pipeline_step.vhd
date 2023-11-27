@@ -19,7 +19,7 @@ end pipeline_step;
 
 architecture behavior_pipeline_step of pipeline_step is
 begin
-    process(clk, A_in, B_in, C_in, OP_in)
+    process(clk)
         begin
             if clk'event and clk='1' then
                 A_out <= A_in;

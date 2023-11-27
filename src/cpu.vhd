@@ -5,7 +5,8 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity cpu is
     Port (
-        clk : in STD_LOGIC
+        clk : in STD_LOGIC;
+        reset : in STD_LOGIC
   );
 end cpu;
 
@@ -120,14 +121,17 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal W_enable: STD_LOGIC;
 
     --- internal component of cpu
-    signal inst : STD_LOGIC_VECTOR(31 downto 0);
-    signal PC : STD_LOGIC_VECTOR(7 downto 0) := X"00";
+    signal inst_in, inst_out : STD_LOGIC_VECTOR(31 downto 0);
+    signal PC, ALEA_COUNT : STD_LOGIC_VECTOR(7 downto 0) := X"00";
     
 begin
-    instruction_memory_inst : instruction PORT MAP(PC, inst , clk);
+    with ALEA_COUNT select
+        inst_out <= inst_in when X"00",
+                    X"00000000" when others;
+    instruction_memory_inst : instruction PORT MAP(PC, inst_in , clk);
     
     -- step1 pipeline
-    step1_lidi  :           pipeline_step PORT MAP(inst(23 downto 16), inst(15 downto 8), inst(7 downto 0), inst(27 downto 24), clk, di_A, di_B_out, di_C_out, di_OP);
+    step1_lidi  :           pipeline_step PORT MAP(inst_out(23 downto 16), inst_out(15 downto 8), inst_out(7 downto 0), inst_out(27 downto 24), clk, di_A, di_B_out, di_C_out, di_OP);
     memory_register_inst :  reg PORT MAP(di_B_out(3 downto 0), di_C_out(3 downto 0), re_A(3 downto 0), W_enable, re_B, '1', clk, qA, di_C_in);
     mux_bdr_inst :          mux_bdr PORT MAP(di_OP,di_B_out,qA,di_B_in);
 
@@ -165,8 +169,19 @@ begin
 
     process(clk)
         begin
-            if clk'event and clk='1' then
-                PC <= PC+'1';
+            if clk'event and clk='1' and reset='0' then
+                if (di_OP = X"06" and inst_out(27 downto 24) = X"05" and di_A = inst_out(15 downto 8)) or (ALEA_COUNT > 0 and ALEA_COUNT < 5) then
+                    if ALEA_COUNT = 0 then
+                        PC <= PC-'1';
+                    end if;
+                    ALEA_COUNT <= ALEA_COUNT+'1';
+                else 
+                    PC <= PC+'1';
+                    ALEA_COUNT <= X"00";
+                end if;
+            elsif reset ='1' then
+                PC <= X"00";
+                ALEA_COUNT <= X"00";
             end if;
     end process;
 

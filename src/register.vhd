@@ -34,7 +34,7 @@ begin
         else W_Data;
     
     -- Write data synchronously
-    process(address_W, W_Enable, W_Data, reset, clk) is
+    process(clk) is
     begin
         -- Reset the memory if shutdown
         if reset = '0' then

@@ -8,11 +8,12 @@ end test_cpu;
 architecture bench of test_cpu is
     component cpu
         Port (
-            clk : in STD_LOGIC
+            clk : in STD_LOGIC;
+            reset : in STD_LOGIC
         );
     end component;
 
-    signal inClock : STD_LOGIC := '0';  
+    signal inClock, inReset : STD_LOGIC := '0';  
     
     -- Signals for monitoring internal states
     signal int_PC, int_re_A, int_re_B, int_re_C : STD_LOGIC_VECTOR(7 downto 0);
@@ -20,11 +21,13 @@ architecture bench of test_cpu is
     
 begin
     uut: cpu PORT MAP( 
-        inClock
+        inClock,
+        inReset
     );
 
     -- Clock generation
     inClock <= not inClock after 10 ns; -- Adjust clock period as necessary
+    inReset <= '1', '0' after 20ns;
 
 end bench;
 
