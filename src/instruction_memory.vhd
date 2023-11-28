@@ -25,10 +25,10 @@ entity instruction is
         end loop;
         init_result(0) := X"06000A0F";
         init_result(1) := X"06010B0F";
-        init_result(2) := X"06020C0F";
-        init_result(3) := X"06030D0F";
-        init_result(4) := X"06040E0F";
-        init_result(5) := X"06050F0F";
+        init_result(2) := X"06020B0F";
+
+        
+        -- init_result(6) := X"0502010F";
         return init_result;
     end function init;
 end instruction;
@@ -37,9 +37,9 @@ architecture behavior_instr of instruction is
     -- Memory variable
     signal code_memory: code_array := init;
 begin
-    process(instruction, clk) is
+    process(clk) is
     begin
-        if clk'event AND clk = '1' then
+        if rising_edge(clk) then
             code <= code_memory(CONV_INTEGER(UNSIGNED(instruction)));
         end if;
     end process;

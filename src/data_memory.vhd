@@ -16,7 +16,7 @@ architecture Behavioral of data_memory is
     type MemoryArray is array (0 to 255) of STD_LOGIC_VECTOR(7 downto 0);
     signal Memory : MemoryArray := (others => X"00");
 begin
-    process(CLK, RST)
+    process(CLK)
     begin
         if RST = '1' then
             Memory <= (others => X"00");  -- Reset the memory to 0x00
