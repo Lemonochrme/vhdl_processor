@@ -23,10 +23,21 @@ entity instruction is
         for i in code_array'range loop
             init_result(i) := std_logic_vector(conv_unsigned(0, 32));
         end loop;
-        init_result(0) := X"06000A0F";
-        init_result(1) := X"06010B0F";
-        init_result(2) := X"06020B0F";
-
+        init_result(0) := X"0600AA00";
+        init_result(1) := X"0601BB00";
+        init_result(2) := X"0602CC00";
+        init_result(3) := X"0603DD00";
+        init_result(4) := X"0604EE00";
+        init_result(5) := X"0605FF00";
+        init_result(6) := X"00000000";
+        init_result(7) := X"00000000";
+        init_result(8) := X"00000000";
+        init_result(9) := X"00000000";
+        init_result(10) := X"00000000";
+        init_result(11) := X"00000000";
+        init_result(12) := X"00000000";
+        -- Copy
+        init_result(13) := X"05000300"; -- Copier ce qu'il y a à @03 à @00
         
         -- init_result(6) := X"0502010F";
         return init_result;

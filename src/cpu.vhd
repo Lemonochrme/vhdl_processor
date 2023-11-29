@@ -89,9 +89,11 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal R_ADDRESS_B_HANDLE : STD_LOGIC_VECTOR(3 DOWNTO 0);
     signal W_ADDRESS_HANDLE   : STD_LOGIC_VECTOR(3 DOWNTO 0);
     signal W_DATA_HANDLE      : STD_LOGIC_VECTOR(7 DOWNTO 0);
-    signal W_ENABLE_HANDLE    : STD_LOGIC;
+    signal W_ENABLE_HANDLE    : STD_LOGIC := '0';
     signal A_DATA_OUT_HANDLE  : STD_LOGIC_VECTOR(7 DOWNTO 0);
     signal B_DATA_OUT_HANDLE  : STD_LOGIC_VECTOR(7 DOWNTO 0);
+
+    signal TEST : STD_LOGIC_VECTOR(7 downto 0) := X"FF";
 
 BEGIN
    -- Instantiation des composants
@@ -116,6 +118,10 @@ BEGIN
 
 
     -- Pipeline
+
+
+
+
     OP_LI_DI <= IR(31 downto 24);
     A_LI_DI  <= IR(23 downto 16);
     B_LI_DI  <= IR(15 downto 8);
@@ -124,15 +130,24 @@ BEGIN
     begin
         if rising_edge(clk) then
             -- Banc de registre
-            case OP_LI_DI is
-                when X"06" => -- AFC
-                    OP_DI_EX <= OP_LI_DI;
-                    A_DI_EX  <= A_LI_DI; 
-                    B_DI_EX  <= B_LI_DI;  
-                    C_DI_EX  <= C_LI_DI; 
-                when others =>
-                    null;
-            end case;
+            if OP_LI_DI = X"06" then -- AFC
+                OP_DI_EX <= OP_LI_DI;
+                A_DI_EX  <= A_LI_DI; 
+                B_DI_EX  <= B_LI_DI;  
+                C_DI_EX  <= C_LI_DI;
+            elsif OP_LI_DI = X"05" then
+                OP_DI_EX <= OP_LI_DI;
+                A_DI_EX  <= A_LI_DI;   
+                C_DI_EX  <= C_LI_DI; 
+        
+                -- B_DI_EX <= A_DATA_OUT_HANDLE;
+                R_ADDRESS_A_HANDLE <= B_LI_DI(3 downto 0);   
+            else
+                OP_DI_EX <= X"00";
+                A_DI_EX  <= X"00"; 
+                B_DI_EX  <= X"00";  
+                C_DI_EX  <= X"00";           
+            end if;
         end if;
     end process;
 
@@ -140,15 +155,22 @@ BEGIN
     begin
         if rising_edge(clk) then
             -- Executer instruction si nécéssaire (ALU)
-            case OP_DI_EX is
-                when X"06" =>
-                    OP_EX_MEM <= OP_DI_EX;
-                    A_EX_MEM  <= A_DI_EX; 
-                    B_EX_MEM  <= B_DI_EX;  
-                    C_EX_MEM  <= C_DI_EX; 
-                when others =>
-                    null;
-            end case;
+            if OP_DI_EX = X"06" then
+                OP_EX_MEM <= OP_DI_EX;
+                A_EX_MEM  <= A_DI_EX; 
+                B_EX_MEM  <= B_DI_EX;  
+                C_EX_MEM  <= C_DI_EX;
+            elsif OP_DI_EX = X"05" then
+                OP_EX_MEM <= OP_DI_EX;
+                A_EX_MEM  <= A_DI_EX; 
+                B_EX_MEM  <= A_DATA_OUT_HANDLE;  
+                C_EX_MEM  <= C_DI_EX;                
+            else
+                OP_EX_MEM <= X"00";
+                A_EX_MEM  <= X"00"; 
+                B_EX_MEM  <= X"00";  
+                C_EX_MEM  <= X"00";
+            end if;
         end if;
     end process;
 
@@ -156,15 +178,17 @@ BEGIN
     begin
         if rising_edge(clk) then
             -- Ecrire ou lire memoire des données
-            case OP_EX_MEM is
-                when X"06" =>
-                    OP_MEM_RE <= OP_EX_MEM;
-                    A_MEM_RE  <= A_EX_MEM; 
-                    B_MEM_RE  <= B_EX_MEM;  
-                    C_MEM_RE  <= C_EX_MEM;  
-                when others =>
-                    null;
-            end case;
+            if OP_EX_MEM = X"06" or OP_EX_MEM = X"05" then
+                OP_MEM_RE <= OP_EX_MEM;
+                A_MEM_RE  <= A_EX_MEM; 
+                B_MEM_RE  <= B_EX_MEM;  
+                C_MEM_RE  <= C_EX_MEM;  
+            else
+                OP_MEM_RE <= X"00";
+                A_MEM_RE  <= X"00"; 
+                B_MEM_RE  <= X"00";  
+                C_MEM_RE  <= X"00";  
+            end if;
         end if;
     end process;
 
@@ -173,16 +197,31 @@ BEGIN
     begin
         if rising_edge(clk) then          
             -- Ecrire dans les registres
-            case OP_MEM_RE is -- Si OP_RE : b c Si OP_MEM : a b
-                when X"06" =>
-                    W_ENABLE_HANDLE  <= '1';
-                    W_ADDRESS_HANDLE <= A_MEM_RE(3 downto 0);
-                    W_DATA_HANDLE    <= B_MEM_RE;
-                when others =>
-                    null;
-            end case;
+            if OP_MEM_RE = X"06" then
+                W_ADDRESS_HANDLE <= A_MEM_RE(3 downto 0);
+                W_DATA_HANDLE    <= B_MEM_RE;
+            elsif OP_MEM_RE = X"05" then
+                W_ADDRESS_HANDLE <= A_MEM_RE(3 downto 0);
+                W_DATA_HANDLE    <= B_MEM_RE;
+            else
+                null;
+            end if;
         end if;
     end process;
+
+
+    -- W_ENABLE HANDLING "MUX"
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" then
+                W_ENABLE_HANDLE <= '1';                
+            else            
+                W_ENABLE_HANDLE <= '0';
+            end if;
+        end if;
+    end process;
+
 
     PC_UPDATE: process(clk)
     begin
