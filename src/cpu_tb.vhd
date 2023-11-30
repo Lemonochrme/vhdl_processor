@@ -15,10 +15,6 @@ architecture bench of test_cpu is
 
     signal inClock, inReset : STD_LOGIC := '0';  
     
-    -- Signals for monitoring internal states
-    signal int_PC, int_re_A, int_re_B, int_re_C : STD_LOGIC_VECTOR(7 downto 0);
-    signal int_re_OP : STD_LOGIC_VECTOR(3 downto 0);
-    
 begin
     uut: cpu PORT MAP( 
         inClock,

@@ -121,17 +121,17 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal W_enable: STD_LOGIC;
 
     --- internal component of cpu
-    signal inst_in, inst_out : STD_LOGIC_VECTOR(31 downto 0);
-    signal PC, ALEA_COUNT : STD_LOGIC_VECTOR(7 downto 0) := X"00";
+    signal inst : STD_LOGIC_VECTOR(31 downto 0);
+    signal PC : STD_LOGIC_VECTOR(7 downto 0) := X"00";
+
+    -- Aleas handling signals
+    signal inst_read, inst_write, alea_handler, alea_li_di : STD_LOGIC := '0';
     
 begin
-    with ALEA_COUNT select
-        inst_out <= inst_in when X"00",
-                    X"00000000" when others;
-    instruction_memory_inst : instruction PORT MAP(PC, inst_in , clk);
+    instruction_memory_inst : instruction PORT MAP(PC, inst , clk);
     
     -- step1 pipeline
-    step1_lidi  :           pipeline_step PORT MAP(inst_out(23 downto 16), inst_out(15 downto 8), inst_out(7 downto 0), inst_out(27 downto 24), clk, di_A, di_B_out, di_C_out, di_OP);
+    step1_lidi  :           pipeline_step PORT MAP(inst(23 downto 16), inst(15 downto 8), inst(7 downto 0), inst(27 downto 24), clk, di_A, di_B_out, di_C_out, di_OP);
     memory_register_inst :  reg PORT MAP(di_B_out(3 downto 0), di_C_out(3 downto 0), re_A(3 downto 0), W_enable, re_B, '1', clk, qA, di_C_in);
     mux_bdr_inst :          mux_bdr PORT MAP(di_OP,di_B_out,qA,di_B_in);
 
@@ -154,7 +154,7 @@ begin
                 '1' when others;
     data_memory_inst :  data_memory PORT MAP(clk, '0', RW_MEM, mem_address, mem_B_in, mem_data);
     mux_mem_str_inst :  mux_mem_str PORT MAP(mem_OP, mem_B_in, mem_data, mem_B_out);
-
+    
     -- step4 pipeline
     step4_memre : pipeline_step PORT MAP(mem_A, mem_B_out, X"00", mem_OP, clk, re_A, re_B, open, re_OP);
     -- LC step 4
@@ -167,22 +167,38 @@ begin
                     '1' when X"3",
                     '0' when others;
 
-    process(clk)
+    -- Gestion des aleas
+    -- Uniquement l'AFC et le LOAD ne pose pas d'aléa de lecture
+    with inst(27 downto 24) select
+        inst_read <=    '0' when X"6",
+                        '0' when X"7",
+                        '1' when others;
+    -- Uniquement le STORE ne pose pas d'aléa d'écriture
+    with di_op select
+        inst_write <=   '0' when X"8",
+                        '1' when others;
+                        
+    -- Test d'aléa
+    alea_li_di <=   '0' when (alea_handler = '1') else
+                    '1' when (inst_read = '1') and (inst_write = '1') and (di_OP = X"06" and inst(27 downto 24) = X"05" and di_A = inst(15 downto 8)) else
+                    '0';                
+
+    process --(clk, reset)
         begin
-            if clk'event and clk='1' and reset='0' then
-                if (di_OP = X"06" and inst_out(27 downto 24) = X"05" and di_A = inst_out(15 downto 8)) or (ALEA_COUNT > 0 and ALEA_COUNT < 5) then
-                    if ALEA_COUNT = 0 then
-                        PC <= PC-'1';
-                    end if;
-                    ALEA_COUNT <= ALEA_COUNT+'1';
-                else 
+        wait until falling_edge(clk);
+        --    if clk'event and clk='1' then 
+                -- Fonctionnement sans aleas
+                if alea_li_di = '0' and alea_handler='0' then 
                     PC <= PC+'1';
-                    ALEA_COUNT <= X"00";
+                -- When Quand an alea is detecté, alea gestionnaire gère l'opcode
+                elsif alea_li_di = '1' then
+                    alea_handler <= '1';
+                elsif inst(27 downto 24) = re_OP then
+                    alea_handler <= '0';
+                elsif reset ='1' then
+                    PC <= X"00";
                 end if;
-            elsif reset ='1' then
-                PC <= X"00";
-                ALEA_COUNT <= X"00";
-            end if;
+        --    end if;
     end process;
 
 END cpu_arch;
