@@ -147,11 +147,11 @@ BEGIN
                 A_DI_EX  <= A_LI_DI;   
                 C_DI_EX  <= C_LI_DI; 
                 R_ADDRESS_A_HANDLE <= B_LI_DI(3 downto 0);   
-            elsif OP_LI_DI = X"01" then -- ADD
+            elsif OP_LI_DI = X"01" or OP_LI_DI = X"02" then -- ADD
                 OP_DI_EX <= OP_LI_DI;
                 A_DI_EX  <= A_LI_DI;   
                 R_ADDRESS_B_HANDLE <= C_LI_DI(3 downto 0); 
-                R_ADDRESS_A_HANDLE <= B_LI_DI(3 downto 0);                  
+                R_ADDRESS_A_HANDLE <= B_LI_DI(3 downto 0);       
             else
                 OP_DI_EX <= X"00";
                 A_DI_EX  <= X"00"; 
@@ -172,13 +172,17 @@ BEGIN
                 OP_EX_MEM <= OP_DI_EX;
                 A_EX_MEM  <= A_DI_EX; 
                 B_EX_MEM  <= A_DATA_OUT_HANDLE; -- Pour éviter décallage temporel on passe directement A_DATA_OUT_HANDLE au lieu de B_DI_EX
-            elsif OP_DI_EX = X"01" then
+            elsif OP_DI_EX = X"01" or OP_DI_EX = X"02" then
                 -- ALU
                 OP_EX_MEM <= OP_DI_EX;
                 A_EX_MEM  <= A_DI_EX;
                 ALU_A_OPERAND <= A_DATA_OUT_HANDLE;
                 ALU_B_OPERAND <= B_DATA_OUT_HANDLE;
-                ALU_OP_TYPE <= "000"; -- ADD
+                if OP_DI_EX = X"01" then
+                    ALU_OP_TYPE <= "000"; -- ADD
+                elsif OP_DI_EX = X"02" then
+                    ALU_OP_TYPE <= "110"; -- Multiplication
+                end if;
             else
                 OP_EX_MEM <= X"00";
                 A_EX_MEM  <= X"00"; 
@@ -195,7 +199,7 @@ BEGIN
                 OP_MEM_RE <= OP_EX_MEM;
                 A_MEM_RE  <= A_EX_MEM; 
                 B_MEM_RE  <= B_EX_MEM;  
-            elsif OP_EX_MEM = X"01" then
+            elsif OP_EX_MEM = X"01" or OP_EX_MEM = X"02" then
                 OP_MEM_RE <= OP_EX_MEM;
                 A_MEM_RE  <= A_EX_MEM; 
                 B_MEM_RE <= ALU_DATA_OUT;
@@ -212,7 +216,7 @@ BEGIN
     begin
         if rising_edge(clk) then          
             -- Ecrire dans les registres
-            if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" or OP_MEM_RE = X"01" then
+            if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" or OP_MEM_RE = X"01" or OP_MEM_RE = X"02" then
                 W_ADDRESS_HANDLE <= A_MEM_RE(3 downto 0);
                 W_DATA_HANDLE    <= B_MEM_RE;
             else
@@ -226,7 +230,7 @@ BEGIN
     process(clk)
     begin
         if rising_edge(clk) then
-            if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" or OP_MEM_RE = X"01" then
+            if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" or OP_MEM_RE = X"01" or OP_MEM_RE = X"02" then
                 W_ENABLE_HANDLE <= '1';                
             else            
                 W_ENABLE_HANDLE <= '0';

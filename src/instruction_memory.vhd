@@ -43,6 +43,9 @@ entity instruction is
         init_result(15) := X"01020404"; -- ADD 2 + 2
         init_result(16) := X"01020405"; -- ADD 2 + 3
         init_result(17) := X"01020505"; -- ADD 3 + 3
+        -- Multiplication
+        init_result(18) := X"02020505"; -- MULTIPLICATION 3 * 3
+
 
         return init_result;
     end function init;
