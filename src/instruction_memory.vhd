@@ -48,7 +48,10 @@ entity instruction is
         -- Soustraction
         init_result(19) := X"03020303"; -- Soustraction 1 - 1
         init_result(20) := X"03020504"; -- Soustraction 3 - 2
-
+        -- STORE
+        init_result(21) := X"08000100";
+        -- LOAD
+        -- init_result(22) := X"07000000";
 
         return init_result;
     end function init;

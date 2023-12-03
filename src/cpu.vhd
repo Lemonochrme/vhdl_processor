@@ -98,6 +98,14 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal ALU_DATA_OUT  : STD_LOGIC_VECTOR(7 DOWNTO 0);
     signal ALU_FLAGS     : STD_LOGIC_VECTOR(3 DOWNTO 0);
 
+    -- Data Memory specific signals
+    signal DATAMEM_RESET     : STD_lOGIC := '0'; -- Reset invactif par defaut
+    signal DATAMEM_RW_ENABLE : STD_lOGIC := '1'; -- Lecture par defaut pour éviter les écritures non voulues
+    signal DATAMEM_ADDRESS   : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    signal DATAMEM_DATA_IN   : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    signal DATAMEM_DATA_OUT  : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    
+
 BEGIN
     -- Instantiation des composants
     RegisterFile_Instance: reg PORT MAP (
@@ -127,6 +135,14 @@ BEGIN
 		flags =>  ALU_FLAGS
     );
 
+    DataMemory_Instance: data_memory PORT MAP (
+        clk         => clk,
+		rst         => DATAMEM_RESET, -- Reset actif à '1'
+		rw_enable   => DATAMEM_RW_ENABLE, -- Lecture: '1' Ecriture: '0'
+		addr        => DATAMEM_ADDRESS, -- Adresse de la zone mémoire
+		data_in     => DATAMEM_DATA_IN, -- Data écrite à l'adresse addr
+		data_out    => DATAMEM_DATA_OUT -- Data présente à l'adresse addr
+    );
 
     -- Pipeline
     OP_LI_DI <= IR(31 downto 24);
@@ -137,17 +153,17 @@ BEGIN
     begin
         if rising_edge(clk) then
             -- Banc de registre
-            if OP_LI_DI = X"06" then -- AFC
+            if OP_LI_DI = X"06" or OP_LI_DI = X"07" then -- AFC / LOAD
                 OP_DI_EX <= OP_LI_DI;
                 A_DI_EX  <= A_LI_DI; 
                 B_DI_EX  <= B_LI_DI;  
                 C_DI_EX  <= C_LI_DI;
-            elsif OP_LI_DI = X"05" then -- COPY
+            elsif OP_LI_DI = X"05" or OP_LI_DI = X"08" then -- COPY / STORE
                 OP_DI_EX <= OP_LI_DI;
                 A_DI_EX  <= A_LI_DI;   
                 C_DI_EX  <= C_LI_DI; 
                 R_ADDRESS_A_HANDLE <= B_LI_DI(3 downto 0);   
-            elsif OP_LI_DI = X"01" or OP_LI_DI = X"02" or OP_LI_DI = X"03" then -- ADD
+            elsif OP_LI_DI = X"01" or OP_LI_DI = X"02" or OP_LI_DI = X"03" then -- ALU
                 OP_DI_EX <= OP_LI_DI;
                 A_DI_EX  <= A_LI_DI;   
                 R_ADDRESS_B_HANDLE <= C_LI_DI(3 downto 0); 
@@ -168,10 +184,10 @@ BEGIN
                 OP_EX_MEM <= OP_DI_EX;
                 A_EX_MEM  <= A_DI_EX; 
                 B_EX_MEM  <= B_DI_EX;  
-            elsif OP_DI_EX = X"05" then
+            elsif OP_DI_EX = X"05" or OP_DI_EX = X"08" then -- COPY / STORE
                 OP_EX_MEM <= OP_DI_EX;
                 A_EX_MEM  <= A_DI_EX; 
-                B_EX_MEM  <= A_DATA_OUT_HANDLE; -- Pour éviter décallage temporel on passe directement A_DATA_OUT_HANDLE au lieu de B_DI_EX
+                B_EX_MEM  <= A_DATA_OUT_HANDLE; -- Pour éviter tout décallage temporel on passe directement A_DATA_OUT_HANDLE au lieu de B_DI_EX
             elsif OP_DI_EX = X"01" or OP_DI_EX = X"02" or OP_DI_EX = X"03" then
                 -- ALU
                 OP_EX_MEM <= OP_DI_EX;
@@ -205,6 +221,12 @@ BEGIN
                 OP_MEM_RE <= OP_EX_MEM;
                 A_MEM_RE  <= A_EX_MEM; 
                 B_MEM_RE <= ALU_DATA_OUT;
+            elsif OP_EX_MEM = X"08" then -- STORE
+                OP_MEM_RE <= OP_EX_MEM;
+                DATAMEM_RESET <= '0';
+                DATAMEM_RW_ENABLE <= '0'; -- Ecriture
+                DATAMEM_DATA_IN <= B_EX_MEM; -- On met ce qu'il y a dans B
+                DATAMEM_ADDRESS <= A_EX_MEM; -- A l'adresse de A
             else
                 OP_MEM_RE <= X"00";
                 A_MEM_RE  <= X"00"; 
@@ -221,6 +243,8 @@ BEGIN
             if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" or OP_MEM_RE = X"01" or OP_MEM_RE = X"02" or OP_MEM_RE = X"03" then
                 W_ADDRESS_HANDLE <= A_MEM_RE(3 downto 0);
                 W_DATA_HANDLE    <= B_MEM_RE;
+            elsif OP_MEM_RE = X"08" then
+                null;
             else
                 null;
             end if;
@@ -239,7 +263,6 @@ BEGIN
             end if;
         end if;
     end process;
-
 
     PC_UPDATE: process(clk)
     begin
