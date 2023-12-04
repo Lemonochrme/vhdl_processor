@@ -104,6 +104,8 @@ ARCHITECTURE cpu_arch OF cpu IS
     signal DATAMEM_ADDRESS   : STD_LOGIC_VECTOR(7 DOWNTO 0);
     signal DATAMEM_DATA_IN   : STD_LOGIC_VECTOR(7 DOWNTO 0);
     signal DATAMEM_DATA_OUT  : STD_LOGIC_VECTOR(7 DOWNTO 0);
+
+    signal temp : STD_LOGIC_VECTOR(7 DOWNTO 0) := X"00";
     
 
 BEGIN
@@ -180,10 +182,17 @@ BEGIN
     DI_EX: process(clk)
     begin
         if rising_edge(clk) then
-            if OP_DI_EX = X"06" then
+            if OP_DI_EX = X"06" then -- AFC
                 OP_EX_MEM <= OP_DI_EX;
                 A_EX_MEM  <= A_DI_EX; 
-                B_EX_MEM  <= B_DI_EX;  
+                B_EX_MEM  <= B_DI_EX;
+            elsif OP_DI_EX = X"07" then -- LOAD
+                OP_EX_MEM <= OP_DI_EX;
+                A_EX_MEM  <= A_DI_EX; 
+                B_EX_MEM  <= B_DI_EX;
+                
+                DATAMEM_RESET <= '0';
+                DATAMEM_ADDRESS <= B_DI_EX;
             elsif OP_DI_EX = X"05" or OP_DI_EX = X"08" then -- COPY / STORE
                 OP_EX_MEM <= OP_DI_EX;
                 A_EX_MEM  <= A_DI_EX; 
@@ -224,9 +233,13 @@ BEGIN
             elsif OP_EX_MEM = X"08" then -- STORE
                 OP_MEM_RE <= OP_EX_MEM;
                 DATAMEM_RESET <= '0';
-                DATAMEM_RW_ENABLE <= '0'; -- Ecriture
                 DATAMEM_DATA_IN <= B_EX_MEM; -- On met ce qu'il y a dans B
                 DATAMEM_ADDRESS <= A_EX_MEM; -- A l'adresse de A
+            elsif OP_EX_MEM = X"07" then -- LOAD
+                OP_MEM_RE <= OP_EX_MEM;
+                A_MEM_RE  <= A_EX_MEM;
+                B_MEM_RE <= DATAMEM_DATA_OUT;
+                temp <= X"01";
             else
                 OP_MEM_RE <= X"00";
                 A_MEM_RE  <= X"00"; 
@@ -243,6 +256,9 @@ BEGIN
             if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" or OP_MEM_RE = X"01" or OP_MEM_RE = X"02" or OP_MEM_RE = X"03" then
                 W_ADDRESS_HANDLE <= A_MEM_RE(3 downto 0);
                 W_DATA_HANDLE    <= B_MEM_RE;
+            elsif OP_MEM_RE = X"07" then
+                W_ADDRESS_HANDLE <= A_MEM_RE(3 downto 0);
+                W_DATA_HANDLE    <= B_MEM_RE;
             elsif OP_MEM_RE = X"08" then
                 null;
             else
@@ -252,17 +268,22 @@ BEGIN
     end process;
 
 
-    -- W_ENABLE HANDLING "MUX"
+    -- W_ENABLE HANDLING MUX
     process(clk)
     begin
         if rising_edge(clk) then
-            if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" or OP_MEM_RE = X"01" or OP_MEM_RE = X"02" or OP_MEM_RE = X"03" then
+            if OP_MEM_RE = X"06" or OP_MEM_RE = X"05" or OP_MEM_RE = X"01" or OP_MEM_RE = X"02" or OP_MEM_RE = X"03" or OP_MEM_RE = X"07" then
                 W_ENABLE_HANDLE <= '1';                
             else            
                 W_ENABLE_HANDLE <= '0';
             end if;
         end if;
     end process;
+
+    -- DATAMEM_RW_ENABLE HANDLING MUX
+    DATAMEM_RW_ENABLE <= '1' when OP_DI_EX = X"07" else -- Lecture pour instruction 0x07
+                         '0' when OP_EX_MEM = X"08" else -- Ecriture pour instruction 0x08 
+                         '0'; 
 
     PC_UPDATE: process(clk)
     begin

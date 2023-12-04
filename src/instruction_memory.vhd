@@ -49,9 +49,14 @@ entity instruction is
         init_result(19) := X"03020303"; -- Soustraction 1 - 1
         init_result(20) := X"03020504"; -- Soustraction 3 - 2
         -- STORE
-        init_result(21) := X"08000100";
+        init_result(21) := X"08000100"; -- On store R01 à l'adresse @00
         -- LOAD
-        -- init_result(22) := X"07000000";
+        init_result(22) := X"00000000";
+        init_result(23) := X"00000000";
+        init_result(24) := X"00000000";
+        init_result(25) := X"00000000";
+        init_result(26) := X"00000000";
+        init_result(27) := X"07070000"; -- On load ce qu'il y a à @00 dans R7
 
         return init_result;
     end function init;

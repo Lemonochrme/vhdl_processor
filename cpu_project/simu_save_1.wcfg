@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="test_cpu_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="test_cpu" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="515.260 ns"></ZoomStartTime>
+      <ZoomEndTime time="869.261 ns"></ZoomEndTime>
+      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="219"></NameColumnWidth>
+      <ValueColumnWidth column_width="104"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="13" />
+   <wvobject fp_name="/test_cpu/inClock" type="logic">
+      <obj_property name="ElementShortName">inClock</obj_property>
+      <obj_property name="ObjectShortName">inClock</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/DataMemory_Instance/Memory" type="array">
+      <obj_property name="ElementShortName">Memory[0:255][7:0]</obj_property>
+      <obj_property name="ObjectShortName">Memory[0:255][7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/OP_LI_DI" type="array">
+      <obj_property name="ElementShortName">OP_LI_DI[7:0]</obj_property>
+      <obj_property name="ObjectShortName">OP_LI_DI[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/OP_DI_EX" type="array">
+      <obj_property name="ElementShortName">OP_DI_EX[7:0]</obj_property>
+      <obj_property name="ObjectShortName">OP_DI_EX[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/OP_EX_MEM" type="array">
+      <obj_property name="ElementShortName">OP_EX_MEM[7:0]</obj_property>
+      <obj_property name="ObjectShortName">OP_EX_MEM[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/OP_MEM_RE" type="array">
+      <obj_property name="ElementShortName">OP_MEM_RE[7:0]</obj_property>
+      <obj_property name="ObjectShortName">OP_MEM_RE[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/W_ENABLE_HANDLE" type="logic">
+      <obj_property name="ElementShortName">W_ENABLE_HANDLE</obj_property>
+      <obj_property name="ObjectShortName">W_ENABLE_HANDLE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/W_ADDRESS_HANDLE" type="array">
+      <obj_property name="ElementShortName">W_ADDRESS_HANDLE[3:0]</obj_property>
+      <obj_property name="ObjectShortName">W_ADDRESS_HANDLE[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/W_DATA_HANDLE" type="array">
+      <obj_property name="ElementShortName">W_DATA_HANDLE[7:0]</obj_property>
+      <obj_property name="ObjectShortName">W_DATA_HANDLE[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/DATAMEM_DATA_OUT" type="array">
+      <obj_property name="ElementShortName">DATAMEM_DATA_OUT[7:0]</obj_property>
+      <obj_property name="ObjectShortName">DATAMEM_DATA_OUT[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/B_MEM_RE" type="array">
+      <obj_property name="ElementShortName">B_MEM_RE[7:0]</obj_property>
+      <obj_property name="ObjectShortName">B_MEM_RE[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/RegisterFile_Instance/memory" type="array">
+      <obj_property name="ElementShortName">memory[0:15][7:0]</obj_property>
+      <obj_property name="ObjectShortName">memory[0:15][7:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject fp_name="/test_cpu/uut/DataMemory_Instance/Memory" type="array">
+      <obj_property name="ElementShortName">Memory[0:255][7:0]</obj_property>
+      <obj_property name="ObjectShortName">Memory[0:255][7:0]</obj_property>
+   </wvobject>
+</wave_config>
