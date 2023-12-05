@@ -20,7 +20,7 @@ begin
     begin
         if RST = '1' then
             Memory <= (others => X"00");  -- Reset the memory to 0x00
-        elsif rising_edge(CLK) then 
+        elsif falling_edge(CLK) then 
             if RW_ENABLE = '1' then -- Read
                 DATA_OUT <= Memory(to_integer(unsigned(ADDR)));
             else -- Write
